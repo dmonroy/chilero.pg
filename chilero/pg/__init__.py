@@ -1,1 +1,1 @@
-from .connection import parse_pgurl
+from .utils import parse_pgurl
