@@ -1,14 +1,15 @@
 import asyncio
 
-from chilero.pg.connection import get_pool
 from chilero.web import Application as BaseApplication
+
+from .connection import get_pool
 
 
 class Application(BaseApplication):
 
     def __init__(self, *args, **kwargs):
         self.settings = kwargs.pop('settings') or {}
-        super(BaseApplication, self).__init__(*args, **kwargs)
+        super(Application, self).__init__(*args, **kwargs)
 
     @asyncio.coroutine
     def get_pool(self):
