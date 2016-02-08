@@ -1,10 +1,10 @@
 import asyncio
 import random
-
 import sys
-from chilero.web.test import WebTestCase
 
 from chilero.pg.utils import create_database, drop_database
+from chilero.web.test import WebTestCase
+
 from .application import Application
 
 
@@ -45,7 +45,6 @@ class TestCase(WebTestCase):
     def tearDownClass(cls):
         cls._destroy_db()
 
-
     @classmethod
     def _initialize_db(cls):
         create_database(cls._database_name)
@@ -53,4 +52,3 @@ class TestCase(WebTestCase):
     @classmethod
     def _destroy_db(cls):
         drop_database(cls._database_name)
-

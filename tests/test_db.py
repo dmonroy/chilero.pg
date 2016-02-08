@@ -25,4 +25,3 @@ class TestRandomDB(TestCase):
                 version=version
             )
         )
-
