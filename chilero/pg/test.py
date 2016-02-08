@@ -37,6 +37,9 @@ class TestCase(WebTestCase):
             name=cls.__name__,
             rand=random.randrange(1000, 100000)
         )
+
+        db_url = db_url.lower()
+
         cls.settings['db_url'] = db_url
 
         cls._database_name = db_url
