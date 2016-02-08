@@ -27,11 +27,18 @@ class TestCase(WebTestCase):
             sys.version_info.minor,
             sys.version_info.micro,
         )
-        cls._database_name = 'test_{version}_{name}_{rand}'.format(
-            version=version,
+
+        dyn_db_url = 'postgres://postgres@localhost/test_{version}'.format(
+            version=version
+        )
+
+        db_url = '{base}_{name}_{rand}'.format(
+            base=cls.settings.get('db_url') or dyn_db_url,
             name=cls.__name__,
             rand=random.randrange(1000, 100000)
         )
+
+        cls._database_name = db_url
         cls._initialize_db()
 
     @classmethod
