@@ -37,6 +37,7 @@ class TestCase(WebTestCase):
             name=cls.__name__,
             rand=random.randrange(1000, 100000)
         )
+        cls.settings['db_url'] = db_url
 
         cls._database_name = db_url
         cls._initialize_db()
@@ -48,6 +49,8 @@ class TestCase(WebTestCase):
     @classmethod
     def _initialize_db(cls):
         create_database(cls._database_name)
+        if hasattr(cls, '_migrate'):
+            cls._migrate(cls._database_name)
 
     @classmethod
     def _destroy_db(cls):
