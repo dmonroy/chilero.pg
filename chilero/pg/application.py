@@ -7,8 +7,12 @@ from .connection import get_pool
 
 class Application(BaseApplication):
 
+    settings = {}
+
     def __init__(self, *args, **kwargs):
-        self.settings = kwargs.pop('settings') or {}
+        if 'settings' in kwargs:
+            self.settings = kwargs.pop('settings')
+
         super(Application, self).__init__(*args, **kwargs)
 
     @asyncio.coroutine
