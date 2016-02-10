@@ -8,7 +8,7 @@ from chilero.web import Response
 from psycopg2._psycopg import IntegrityError
 
 
-class Resourse(BaseResource):
+class Resource(BaseResource):
     list_query = 'SELECT * from {table}'
     object_query = 'SELECT * FROM {table}'
     table_name = None
