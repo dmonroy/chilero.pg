@@ -9,7 +9,7 @@ class TestDBFromSettings(TestCase):
     )
     def test_db_name(self):
         assert self._database_name.startswith(
-            'postgres://postgres@localhost/fixed_db_name_TestDBFromSettings_'
+            'postgres://postgres@localhost/fixed_db_name_testdbfromsettings_'
         )
 
 
@@ -21,7 +21,7 @@ class TestRandomDB(TestCase):
             sys.version_info.micro,
         )
         assert self._database_name.startswith(
-            'postgres://postgres@localhost/test_{version}_TestRandomDB_'.format(
+            'postgres://postgres@localhost/test_{version}_testrandomdb_'.format(
                 version=version
             )
         )
