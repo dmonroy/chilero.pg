@@ -292,10 +292,12 @@ class Resource(BaseResource):
         if set(data.keys()) != set(self.allowed_fields):
             raise HTTPBadRequest()
         data = self.prepare_insert(data)
-
-        pool = yield from self.get_pool()
+        if not isinstance(data, dict):
+            data = yield from data
 
         fields = data.keys()
+
+        pool = yield from self.get_pool()
         with (yield from pool.cursor()) as cur:
             query = (
                 'INSERT INTO {table} ({fields}) '
