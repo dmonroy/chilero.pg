@@ -27,6 +27,13 @@ class TestCase(WebTestCase):
         )
 
     @asyncio.coroutine
+    def _index(self, path):
+        resp = yield from request(
+            'GET', self.full_url(path), loop=self.loop,
+        )
+        return resp
+
+    @asyncio.coroutine
     def _create(self, path, data):
         resp = yield from request(
             'POST', self.full_url(path), loop=self.loop,
