@@ -27,10 +27,20 @@ class TestCase(WebTestCase):
         )
 
     @asyncio.coroutine
+    def _get(self, path, **kwargs):
+        resp = yield from request('GET', path, loop=self.loop, **kwargs)
+        return resp
+
+    @asyncio.coroutine
+    def _get_json(self, path, **kwargs):
+        resp = yield from self._get(path, **kwargs)
+        jresp = yield from resp.json()
+        resp.close()
+        return jresp
+
+    @asyncio.coroutine
     def _index(self, path):
-        resp = yield from request(
-            'GET', self.full_url(path), loop=self.loop,
-        )
+        resp = yield from self._get_json(self.full_url(path))
         return resp
 
     @asyncio.coroutine
@@ -42,14 +52,35 @@ class TestCase(WebTestCase):
         return resp
 
     @asyncio.coroutine
-    def _create_and_get(self, path, data):
-        resp = yield from self._create(path, data)
-        url = resp.headers['Location']
-        resp.close()
+    def _create_and_get(self, path, data, defaults=None):
+        defaults = defaults or {}
+        defaults.update(data)
+        resp = yield from self._create(path, defaults)
+        if resp.status != 201:
+            return resp, None
 
-        resp2 = yield from request(
-            'GET', url, loop=self.loop,
+        url = resp.headers['Location']
+
+        jresp = yield from self._get_json(url)
+
+        return resp, jresp['body']
+
+    @asyncio.coroutine
+    def _patch(self, url, **kwargs):
+        resp = yield from request(
+            'PATCH', url, loop=self.loop,
+            data=json.dumps(kwargs)
         )
-        jresp2 = yield from resp2.json()
-        resp2.close()
-        return jresp2['body']
+        return resp
+
+    @asyncio.coroutine
+    def _search(self, path, terms):
+        resp = self._get_json(
+            self.full_url(
+                '{endpoint}?search={keywords}'.format(
+                    endpoint=path,
+                    keywords='+'.join(terms.split())
+                )
+            )
+        )
+        return resp
