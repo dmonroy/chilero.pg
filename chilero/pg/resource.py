@@ -90,9 +90,12 @@ class Resource(BaseResource):
 
     @property
     def limit(self):
-        return int(self.request.GET.get('limit') or 0) \
-            or int(os.environ.get('PAGE_LIMIT') or 0) \
-            or 20
+        return int(
+            self.request.GET.get('limit')
+            or int(os.environ.get('PAGE_LIMIT') or 20)
+        )
+
+
 
     @property
     def prev_offset(self):
