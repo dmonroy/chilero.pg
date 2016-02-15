@@ -27,11 +27,11 @@ class Application(BaseApplication):
         return self.db_pool
 
     @asyncio.coroutine
-    def close_pool(self):
+    def close_pool(self):  # pragma: no cover
         yield from self.db_pool.finish()
 
     @asyncio.coroutine
-    def finish(self):
+    def finish(self):  # pragma: no cover
         yield from self.close_pool()
 
         yield from super(Application, self).finish()
