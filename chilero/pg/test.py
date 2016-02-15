@@ -2,11 +2,18 @@ import asyncio
 import json
 import random
 import string
+import sys
 
 from aiohttp import request
 from chilero.web.test import WebTestCase
 
 from .application import Application
+
+TEST_DB_SUFFIX = 'test_{}{}{}'.format(
+        sys.version_info.major,
+        sys.version_info.minor,
+        sys.version_info.micro,
+    )
 
 
 class TestCase(WebTestCase):

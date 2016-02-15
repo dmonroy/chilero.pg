@@ -90,12 +90,9 @@ class Resource(BaseResource):
 
     @property
     def limit(self):
-        return int(
-            self.request.GET.get('limit')
-            or int(os.environ.get('PAGE_LIMIT') or 20)
-        )
-
-
+        from_url = self.request.GET.get('limit')
+        from_env = int(os.environ.get('PAGE_LIMIT') or 20)
+        return int(from_url or from_env)
 
     @property
     def prev_offset(self):
@@ -239,30 +236,30 @@ class Resource(BaseResource):
             return self.response(self.serialize_list_object(record))
 
     def get_table_name(self):
-        if self.table_name:
+        if self.table_name:  # pragma: no cover
             return self.table_name
         return self.get_resource_name()
 
     @asyncio.coroutine
-    def before_update(self, cursor):
+    def before_update(self, cursor):  # pragma: no cover
         return cursor
 
     @asyncio.coroutine
-    def after_update(self, cursor):
+    def after_update(self, cursor):  # pragma: no cover
         return cursor
 
-    def prepare_update(self, data):
+    def prepare_update(self, data):  # pragma: no cover
         return data
 
-    def prepare_insert(self, data):
+    def prepare_insert(self, data):  # pragma: no cover
         return data
 
     @asyncio.coroutine
-    def before_insert(self, cursor):
+    def before_insert(self, cursor):  # pragma: no cover
         return cursor
 
     @asyncio.coroutine
-    def after_insert(self, cursor):
+    def after_insert(self, cursor):  # pragma: no cover
         return cursor
 
     def update(self, id):
@@ -295,7 +292,7 @@ class Resource(BaseResource):
         if set(data.keys()) != set(self.allowed_fields):
             raise HTTPBadRequest()
         data = self.prepare_insert(data)
-        if not isinstance(data, dict):
+        if not isinstance(data, dict):  # pragma: no cover
             data = yield from data
 
         fields = data.keys()
