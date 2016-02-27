@@ -233,7 +233,11 @@ class Resource(BaseResource):
             if record is None:
                 raise HTTPNotFound()
 
-            return self.response(self.serialize_list_object(record))
+            record = self.before_serialization(record)
+            obj = self.serialize_object(record)
+            obj = self.after_serialization(obj)
+
+            return self.response(obj)
 
     def get_table_name(self):
         if self.table_name:  # pragma: no cover
