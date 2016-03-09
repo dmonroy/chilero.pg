@@ -274,11 +274,34 @@ class Resource(BaseResource):
     def get_required_fields(self):
         return self.required_fields
 
+    def error_response(self, message, **kwargs):
+        return json.dumps(kwargs, indent=4).encode('utf-8')
+
+    def validate_allowed_fields(self, data):
+        for f in data.keys():
+            if f not in self.get_allowed_fields():
+                raise HTTPBadRequest(
+                    body=self.error_response(
+                        'Field "{field_name}" is not allowed'.format(
+                            field_name=f
+                        )
+                    )
+                )
+
+    def validate_required_fields(self, data):
+        for f in self.get_required_fields():
+            if f not in data.keys():
+                raise HTTPBadRequest(
+                    body=self.error_response(
+                        'Field "{field_name}" is required'.format(
+                            field_name=f
+                        )
+                    )
+                )
+
     def update(self, id):
         data = yield from self.request.json()
-        for x in data.keys():
-            if x not in self.get_allowed_fields():
-                raise HTTPBadRequest()
+        self.validate_allowed_fields(data)
 
         data = self.prepare_update(data)
 
@@ -301,8 +324,10 @@ class Resource(BaseResource):
 
     def new(self, **kwargs):
         data = yield from self.request.json()
-        if set(data.keys()) != set(self.get_allowed_fields()):
-            raise HTTPBadRequest()
+
+        self.validate_allowed_fields(data)
+        self.validate_required_fields(data)
+
         data = self.prepare_insert(data)
         if not isinstance(data, dict):  # pragma: no cover
             data = yield from data
@@ -327,8 +352,10 @@ class Resource(BaseResource):
             yield from self.before_insert(cur)
             try:
                 yield from cur.execute(query, tuple(values))
-            except IntegrityError:
-                raise HTTPConflict()
+            except IntegrityError as e:
+                raise HTTPConflict(
+                    body=self.error_response(bytes(str(e).encode('utf-8')))
+                )
             record_id = (yield from cur.fetchone())[0]
             yield from self.before_insert(cur)
 
