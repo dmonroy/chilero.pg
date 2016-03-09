@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 from urllib.parse import quote_plus
 
@@ -16,6 +17,7 @@ class Resource(BaseResource):
     order_by = 'id'
     id_column = 'id'
     allowed_fields = []
+    required_fields = []
     search_fields = None
 
     @asyncio.coroutine
@@ -266,10 +268,16 @@ class Resource(BaseResource):
     def after_insert(self, cursor):  # pragma: no cover
         return cursor
 
+    def get_allowed_fields(self):
+        return self.allowed_fields
+
+    def get_required_fields(self):
+        return self.required_fields
+
     def update(self, id):
         data = yield from self.request.json()
         for x in data.keys():
-            if x not in self.allowed_fields:
+            if x not in self.get_allowed_fields():
                 raise HTTPBadRequest()
 
         data = self.prepare_update(data)
@@ -293,7 +301,7 @@ class Resource(BaseResource):
 
     def new(self, **kwargs):
         data = yield from self.request.json()
-        if set(data.keys()) != set(self.allowed_fields):
+        if set(data.keys()) != set(self.get_allowed_fields()):
             raise HTTPBadRequest()
         data = self.prepare_insert(data)
         if not isinstance(data, dict):  # pragma: no cover
