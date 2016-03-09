@@ -275,6 +275,7 @@ class Resource(BaseResource):
         return self.required_fields
 
     def error_response(self, message, **kwargs):
+        kwargs['message'] = message
         return json.dumps(kwargs, indent=4).encode('utf-8')
 
     def validate_allowed_fields(self, data):
