@@ -6,7 +6,7 @@ from urllib.parse import quote_plus
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPConflict, HTTPNotFound
 from chilero.web import Resource as BaseResource
 from chilero.web import Response
-from psycopg2._psycopg import IntegrityError
+from psycopg2._psycopg import DatabaseError
 
 
 class Resource(BaseResource):
@@ -316,9 +316,14 @@ class Resource(BaseResource):
                 fields=','.join(['{}=%s'.format(x)for x in updated_fields]),
                 id_column=self.id_column
             )
-            yield from cur.execute(
-                query, tuple([data[f] for f in updated_fields]+[id])
-            )
+            try:
+                yield from cur.execute(
+                    query, tuple([data[f] for f in updated_fields]+[id])
+                )
+            except DatabaseError as e:
+                raise HTTPConflict(
+                    body=self.error_response(e)
+                )
             yield from self.after_update(cur)
 
         return Response(status=204)
@@ -353,7 +358,7 @@ class Resource(BaseResource):
             yield from self.before_insert(cur)
             try:
                 yield from cur.execute(query, tuple(values))
-            except IntegrityError as e:
+            except DatabaseError as e:
                 raise HTTPConflict(
                     body=self.error_response(e)
                 )
