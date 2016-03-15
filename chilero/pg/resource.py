@@ -275,7 +275,7 @@ class Resource(BaseResource):
         return self.required_fields
 
     def error_response(self, message, **kwargs):
-        kwargs['message'] = message
+        kwargs['message'] = str(message)
         return json.dumps(kwargs, indent=4).encode('utf-8')
 
     def validate_allowed_fields(self, data):
@@ -355,7 +355,7 @@ class Resource(BaseResource):
                 yield from cur.execute(query, tuple(values))
             except IntegrityError as e:
                 raise HTTPConflict(
-                    body=self.error_response(bytes(str(e).encode('utf-8')))
+                    body=self.error_response(e)
                 )
             record_id = (yield from cur.fetchone())[0]
             yield from self.before_insert(cur)
