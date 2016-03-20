@@ -300,7 +300,7 @@ class Resource(BaseResource):
                     )
                 )
 
-    def update(self, id):
+    def update(self, id, **kwargs):
         data = yield from self.request.json()
         self.validate_allowed_fields(data)
 
