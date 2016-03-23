@@ -300,11 +300,13 @@ class Resource(BaseResource):
                     )
                 )
 
-    def update(self, id):
+    def update(self, id, **kwargs):
         data = yield from self.request.json()
         self.validate_allowed_fields(data)
 
         data = self.prepare_update(data)
+        if not isinstance(data, dict):  # pragma: no cover
+            data = yield from data
 
         updated_fields = data.keys()
 
