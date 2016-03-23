@@ -305,6 +305,8 @@ class Resource(BaseResource):
         self.validate_allowed_fields(data)
 
         data = self.prepare_update(data)
+        if not isinstance(data, dict):  # pragma: no cover
+            data = yield from data
 
         updated_fields = data.keys()
 
