@@ -182,7 +182,7 @@ class Resource(BaseResource):
         query_filters, query_args = \
             self.get_list_query_filters(conditions, search)
         query = ' '.join([self.get_list_query(), query_filters])
-        query= query+' order by {}'.format(self.order_by)
+        query += ' order by {}'.format(self.order_by)
         query = self.set_offset(self.set_limit(query))
         count = yield from self.get_count(conditions, search)
         response = dict(
