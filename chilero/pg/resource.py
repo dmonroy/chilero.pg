@@ -182,8 +182,8 @@ class Resource(BaseResource):
         query_filters, query_args = \
             self.get_list_query_filters(conditions, search)
         query = ' '.join([self.get_list_query(), query_filters])
+        query= query+' order by {}'.format(self.order_by)
         query = self.set_offset(self.set_limit(query))
-
         count = yield from self.get_count(conditions, search)
         response = dict(
             self=self.get_self_url(),
@@ -196,17 +196,20 @@ class Resource(BaseResource):
             ),
             index=[]
         )
-
         pool = yield from self.get_pool()
         with (yield from pool.cursor()) as cur:
             yield from cur.execute(query, query_args)
             for row in (yield from cur.fetchall()):
                 row = self.before_serialization(row)
+                if asyncio.iscoroutine(row):  # pragma: no cover
+                    row = yield from row
                 obj = self.serialize_object(row)
                 obj = self.after_serialization(obj)
+                if asyncio.iscoroutine(obj):
+                    obj = yield from obj
+
                 response['index'].append(obj)
         response['data']['length'] = len(response['index'])
-
         return response
 
     def serialize_list_object(self, row):
@@ -236,8 +239,12 @@ class Resource(BaseResource):
                 raise HTTPNotFound()
 
             record = self.before_serialization(record)
+            if asyncio.iscoroutine(record):
+                record = yield from record
             obj = self.serialize_object(record)
             obj = self.after_serialization(obj)
+            if asyncio.iscoroutine(obj):
+                obj = yield from obj
 
             return self.response(obj)
 
@@ -305,7 +312,7 @@ class Resource(BaseResource):
         self.validate_allowed_fields(data)
 
         data = self.prepare_update(data)
-        if not isinstance(data, dict):  # pragma: no cover
+        if asyncio.iscoroutine(data):  # pragma: no cover
             data = yield from data
 
         updated_fields = data.keys()
@@ -337,7 +344,7 @@ class Resource(BaseResource):
         self.validate_required_fields(data)
 
         data = self.prepare_insert(data)
-        if not isinstance(data, dict):  # pragma: no cover
+        if asyncio.iscoroutine(data):  # pragma: no cover
             data = yield from data
 
         fields = data.keys()
