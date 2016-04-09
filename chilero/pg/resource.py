@@ -181,8 +181,8 @@ class Resource(BaseResource):
         search = self.request.GET.get('search')
         query_filters, query_args = \
             self.get_list_query_filters(conditions, search)
-        query = ' '.join([self.get_list_query(), query_filters])
-        query += ' order by {}'.format(self.order_by)
+        order_by = ' order by {}'.format(self.order_by)
+        query = ' '.join([self.get_list_query(), query_filters, order_by])
         query = self.set_offset(self.set_limit(query))
         count = yield from self.get_count(conditions, search)
         response = dict(
@@ -204,6 +204,8 @@ class Resource(BaseResource):
                 if asyncio.iscoroutine(row):  # pragma: no cover
                     row = yield from row
                 obj = self.serialize_object(row)
+                if asyncio.iscoroutine(obj):  # pragma: no cover
+                    obj = yield from obj
                 obj = self.after_serialization(obj)
                 if asyncio.iscoroutine(obj):
                     obj = yield from obj
@@ -339,9 +341,15 @@ class Resource(BaseResource):
 
     def new(self, **kwargs):
         data = yield from self.request.json()
+        if asyncio.iscoroutinefunction(self.validate_allowed_fields):
+            yield from self.validate_allowed_fields(data)
+        else:
+            self.validate_allowed_fields(data)
 
-        self.validate_allowed_fields(data)
-        self.validate_required_fields(data)
+        if asyncio.iscoroutinefunction(self.required_fields):
+            yield from self.validate_required_fields(data)
+        else:
+            self.validate_required_fields(data)
 
         data = self.prepare_insert(data)
         if asyncio.iscoroutine(data):  # pragma: no cover
