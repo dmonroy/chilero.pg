@@ -81,6 +81,14 @@ class TestCase(WebTestCase):
         return resp
 
     @asyncio.coroutine
+    def _delete(self, path, **kwargs):
+        resp = yield from request(
+            'DELETE', path, loop=self.loop,
+            **kwargs
+        )
+        return resp
+
+    @asyncio.coroutine
     def _search(self, path, terms):
         resp = self._get_json(
             self.full_url(
