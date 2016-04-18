@@ -386,3 +386,21 @@ class Resource(BaseResource):
             status=201,
             headers=(('Location', self.get_object_url(record_id)),)
         )
+
+    def destroy(self, **kwargs):
+        pool = yield from self.get_pool()
+        with(yield from pool.cursor()) as cur:
+            query = 'DELETE FROM {table} where id={id_column}'.format(
+                table=self.get_table_name(),
+                id_column=kwargs['id']
+            )
+            try:
+                yield from cur.execute(
+                    query
+                )
+            except DatabaseError as e:
+                raise HTTPConflict(
+                    body=self.error_response(e)
+                )
+
+        return Response(status=200)

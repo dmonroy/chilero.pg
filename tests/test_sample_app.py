@@ -138,6 +138,8 @@ class TestBasic(BaseTestCase):
         assert _.status == 201
         _.close()
         assert friend['name'] == name
+        efriend = yield from self._delete(friend['url'])
+        assert efriend.status==200
 
     @asynctest
     def test_create_error(self):
