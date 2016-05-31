@@ -387,7 +387,7 @@ class Resource(BaseResource):
                     body=self.error_response(e)
                 )
             record_id = (yield from cur.fetchone())[0]
-            yield from self.after_insert_insert(cur, record_id)
+            yield from self.after_insert(cur, record_id)
 
         return Response(
             status=201,
