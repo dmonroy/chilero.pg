@@ -281,7 +281,7 @@ class Resource(BaseResource):
         return cursor
 
     @asyncio.coroutine
-    def after_insert(self, cursor):  # pragma: no cover
+    def after_insert(self, cursor, id):  # pragma: no cover
         return cursor
 
     def get_allowed_fields(self):
@@ -387,7 +387,7 @@ class Resource(BaseResource):
                     body=self.error_response(e)
                 )
             record_id = (yield from cur.fetchone())[0]
-            yield from self.before_insert(cur)
+            yield from self.after_insert(cur, record_id)
 
         return Response(
             status=201,
