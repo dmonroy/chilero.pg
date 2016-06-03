@@ -76,7 +76,11 @@ class Resource(BaseResource):
     def get_count(self, conditions=None, search=None):
         query_filters, query_args = \
             self.get_list_query_filters(conditions, search)
-        query = ' '.join([self.get_count_query(), query_filters])
+        count_query = self.get_count_query()
+        if asyncio.iscoroutine(count_query):
+            count_query = yield from count_query
+
+        query = ' '.join([count_query, query_filters])
 
         with (yield from self.get_cursor()) as cur:
             yield from cur.execute(query, query_args)
@@ -182,7 +186,10 @@ class Resource(BaseResource):
         query_filters, query_args = \
             self.get_list_query_filters(conditions, search)
         order_by = ' order by {}'.format(self.order_by)
-        query = ' '.join([self.get_list_query(), query_filters, order_by])
+        get_list_query = self.get_list_query()
+        if asyncio.iscoroutine(get_list_query):
+            get_list_query = yield from get_list_query
+        query = ' '.join([get_list_query, query_filters, order_by])
         query = self.set_offset(self.set_limit(query))
         count = yield from self.get_count(conditions, search)
         response = dict(
@@ -274,7 +281,7 @@ class Resource(BaseResource):
         return cursor
 
     @asyncio.coroutine
-    def after_insert(self, cursor):  # pragma: no cover
+    def after_insert(self, cursor, id):  # pragma: no cover
         return cursor
 
     def get_allowed_fields(self):
@@ -380,7 +387,7 @@ class Resource(BaseResource):
                     body=self.error_response(e)
                 )
             record_id = (yield from cur.fetchone())[0]
-            yield from self.before_insert(cur)
+            yield from self.after_insert(cur, record_id)
 
         return Response(
             status=201,
