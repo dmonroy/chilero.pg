@@ -185,7 +185,7 @@ class Resource(BaseResource):
         if f not in self.allow_order_by:
             raise HTTPBadRequest(
                 body=self.error_response(
-                    'Field "{field_name}" is order by allowed'.format(
+                    'Order by "{field_name}" is not allowed'.format(
                         field_name=f
                     )
                 )
