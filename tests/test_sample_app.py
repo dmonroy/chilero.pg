@@ -12,7 +12,7 @@ class Friends(Resource):
     order_by = 'name ASC'
     search_fields = ['name']
     allowed_fields = ['name']
-    allowed_order_by = ['name']
+    allow_order_by = ['name']
 
     def serialize_object(self, row):
         return dict(

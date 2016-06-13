@@ -19,7 +19,7 @@ class Resource(BaseResource):
     allowed_fields = []
     required_fields = []
     search_fields = None
-    allowed_order_by = order_by
+    allow_order_by = []
 
     @asyncio.coroutine
     def get_pool(self):
@@ -182,7 +182,7 @@ class Resource(BaseResource):
         return query
 
     def validate_allowed_order_by(self, f):
-        if f not in self.allowed_order_by:
+        if f not in self.allow_order_by:
             raise HTTPBadRequest(
                 body=self.error_response(
                     'Field "{field_name}" is order by allowed'.format(
