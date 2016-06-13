@@ -19,6 +19,7 @@ class Resource(BaseResource):
     allowed_fields = []
     required_fields = []
     search_fields = None
+    allowed_order_by = order_by
 
     @asyncio.coroutine
     def get_pool(self):
@@ -180,12 +181,41 @@ class Resource(BaseResource):
 
         return query
 
+    def validate_allowed_order_by(self, f):
+        if f not in self.allowed_order_by:
+            raise HTTPBadRequest(
+                body=self.error_response(
+                    'Field "{field_name}" is order by allowed'.format(
+                        field_name=f
+                    )
+                )
+            )
+
+    def get_order_by(self):
+        order_by_fields = []
+        if 'order_by' in self.request.GET:
+            order_by = self.request.GET['order_by']
+            order_by = order_by.split(',')
+            for x in order_by:
+                if x.startswith('-'):
+                    self.validate_allowed_order_by(x[1:])
+                    order_by_fields.append(x[1:]+'{}'.format(' Desc'))
+                else:
+                    self.validate_allowed_order_by(x)
+                    order_by_fields.append(x+'{}'.format(' Asc'))
+            for a in self.order_by.split(','):
+                if a not in order_by_fields:
+                    order_by_fields.append(a)
+            return ','.join(order_by_fields)
+        else:
+            return self.order_by
+
     def do_index(self, conditions=None):
         conditions = conditions or {}
         search = self.request.GET.get('search')
         query_filters, query_args = \
             self.get_list_query_filters(conditions, search)
-        order_by = ' order by {}'.format(self.order_by)
+        order_by = 'order by {}'.format(self.get_order_by())
         get_list_query = self.get_list_query()
         if asyncio.iscoroutine(get_list_query):
             get_list_query = yield from get_list_query
@@ -318,7 +348,15 @@ class Resource(BaseResource):
 
     def update(self, id, **kwargs):
         data = yield from self.request.json()
-        self.validate_allowed_fields(data)
+        if asyncio.iscoroutinefunction(self.validate_allowed_fields):
+            yield from self.validate_allowed_fields(data)
+        else:
+            self.validate_allowed_fields(data)
+
+        if asyncio.iscoroutinefunction(self.required_fields):
+            yield from self.validate_required_fields(data)
+        else:
+            self.validate_required_fields(data)
 
         data = self.prepare_update(data)
         if asyncio.iscoroutine(data):  # pragma: no cover
