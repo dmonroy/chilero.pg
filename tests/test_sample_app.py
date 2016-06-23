@@ -12,6 +12,7 @@ class Friends(Resource):
     order_by = 'name ASC'
     search_fields = ['name']
     allowed_fields = ['name']
+    allow_order_by = ['name']
 
     def serialize_object(self, row):
         return dict(
@@ -113,6 +114,36 @@ class TestAdvancedOptions(BaseTestCase):
                 assert rname in r['data']['next']
             assert rname in r['data']['prev']
             rname.lower() in r['index'][0]['name'].lower()
+
+    @asynctest
+    def test_oreder_by_ASC(self):
+        yield from self._a_lot_of_friends()
+        name = 'Abel Barrera'
+        _, friend = yield from self._create_friend(name=name)
+        _.close()
+        url = self.full_url('/friends?order_by={}'.format('name'))
+        resp = yield from self._get_json(url)
+        assert resp['index'][0]['name'].startswith('A')
+
+    @asynctest
+    def test_oreder_by_400(self):
+        yield from self._a_lot_of_friends()
+        url = self.full_url('/friends?order_by={}'.format('other'))
+        resp = yield from self._get(url)
+        assert resp.status == 400
+
+    @asynctest
+    def test_oreder_by_desc(self):
+        yield from self._a_lot_of_friends()
+        defaults = dict(
+            name='Zarahi zuna'
+        )
+        resp = yield from self._create('/friends', defaults)
+        assert resp.status == 201
+        resp.close()
+        url = self.full_url('/friends?order_by={}'.format('-name'))
+        resp = yield from self._get_json(url)
+        assert resp['index'][0]['name'].startswith('Z')
 
 
 class TestBasic(BaseTestCase):
