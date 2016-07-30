@@ -126,8 +126,9 @@ class Resource(BaseResource):
         return self.offset + self.limit
 
     def _build_url(self, args):
+        kwarg = self.default_kwargs_for_urls()
         return '{}?{}'.format(
-            self.get_index_url(),
+            self.get_index_url(**kwarg),
             '&'.join(
                 ['{}={}'.format(k, v) for k, v in args.items()]
             )
