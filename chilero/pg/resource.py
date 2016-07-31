@@ -338,17 +338,19 @@ class Resource(BaseResource):
 
     def validate_required_fields(self, data):
         id = self.request.match_info.get('id')
+        a = {}
         for f in self.get_required_fields():
             if id:
-                data[f] = "" if data[f] is None else data[f]
-                if len(data.get(f).strip()) == 0:
-                    raise HTTPBadRequest(
-                        body=self.error_response(
-                            'Field "{field_name}" is required'.format(
-                                    field_name=f
+                a[f] = "" if data.get(f) is None else data.get(f)
+                if f in data:
+                    if len(a.get(f).strip()) == 0:
+                        raise HTTPBadRequest(
+                            body=self.error_response(
+                                'Field "{field_name}" is required'.format(
+                                        field_name=f
+                                )
                             )
                         )
-                    )
 
             else:
                 if f not in data.keys():
