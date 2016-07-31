@@ -341,7 +341,7 @@ class Resource(BaseResource):
         a = {}
         for f in self.get_required_fields():
             if id:
-                a[f] = "" if data.get(f) is None else data.get(f)
+                a[f] = data.get(f, "")
                 if f in data:
                     if len(a.get(f).strip()) == 0:
                         raise HTTPBadRequest(
