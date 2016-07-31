@@ -337,20 +337,34 @@ class Resource(BaseResource):
                 )
 
     def validate_required_fields(self, data):
+        id = self.request.match_info.get('id')
         for f in self.get_required_fields():
-            if f not in data.keys():
-                raise HTTPBadRequest(
-                    body=self.error_response(
-                        'Field "{field_name}" is required'.format(
-                            field_name=f
+            if id:
+                data[f] = "" if data[f] is None else data[f]
+                if len(data.get(f).strip()) == 0:
+                    raise HTTPBadRequest(
+                        body=self.error_response(
+                            'Field "{field_name}" is required'.format(
+                                    field_name=f
+                            )
                         )
                     )
-                )
+
+            else:
+                if f not in data.keys():
+                    raise HTTPBadRequest(
+                        body=self.error_response(
+                            'Field "{field_name}" is required'.format(
+                                field_name=f
+                            )
+                        )
+                    )
 
     def update(self, id, **kwargs):
         data = yield from self.request.json()
         if asyncio.iscoroutinefunction(self.validate_allowed_fields):
             yield from self.validate_allowed_fields(data)
+
         else:
             self.validate_allowed_fields(data)
 
