@@ -343,7 +343,7 @@ class Resource(BaseResource):
             if id:
                 a[f] = data.get(f, "")
                 if f in data:
-                    if len(a.get(f).strip()) == 0:
+                    if len(str(a.get(f)).strip()) == 0:
                         raise HTTPBadRequest(
                             body=self.error_response(
                                 'Field "{field_name}" is required'.format(
