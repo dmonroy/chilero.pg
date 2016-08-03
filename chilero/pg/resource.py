@@ -341,9 +341,10 @@ class Resource(BaseResource):
         a = {}
         for f in self.get_required_fields():
             if id:
-                a[f] = data.get(f, "")
+                a[f] = data.get(f, " ")
+
                 if f in data:
-                    if len(str(a.get(f)).strip()) == 0:
+                    if len(str(a.get(f)).strip()) == 0 or a.get(f) is None:
                         raise HTTPBadRequest(
                             body=self.error_response(
                                 'Field "{field_name}" is required'.format(
