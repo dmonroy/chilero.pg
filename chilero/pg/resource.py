@@ -339,18 +339,26 @@ class Resource(BaseResource):
     def validate_required_fields(self, data):
         id = self.request.match_info.get('id')
         a = {}
-        for f in self.get_required_fields():
+        if asyncio.iscoroutine(self.get_required_fields()):
+            required = yield from self.get_required_fields()
+        else:
+            required = self.get_required_fields()
+        for f in required:
+
             if id:
                 a[f] = data.get(f, " ")
-
+                print(data.get(f, " "))
                 if f in data:
                     if len(str(a.get(f)).strip()) == 0 or a.get(f) is None:
                         raise HTTPBadRequest(
                             body=self.error_response(
                                 'Field "{field_name}" is required'.format(
-                                        field_name=f
+                                    field_name=f
                                 )
-                            )
+                            ),
+                            headers=[
+                                ['Access-Control-Allow-Origin', '*'],
+                            ]
                         )
 
             else:
@@ -360,18 +368,20 @@ class Resource(BaseResource):
                             'Field "{field_name}" is required'.format(
                                 field_name=f
                             )
-                        )
+                        ),
+                        headers=[
+                            ['Access-Control-Allow-Origin', '*'],
+                        ]
                     )
 
     def update(self, id, **kwargs):
         data = yield from self.request.json()
-        if asyncio.iscoroutinefunction(self.validate_allowed_fields):
+        if asyncio.iscoroutine(self.validate_allowed_fields(data)):
             yield from self.validate_allowed_fields(data)
-
         else:
             self.validate_allowed_fields(data)
 
-        if asyncio.iscoroutinefunction(self.required_fields):
+        if asyncio.iscoroutine(self.validate_required_fields(data)):
             yield from self.validate_required_fields(data)
         else:
             self.validate_required_fields(data)
@@ -404,12 +414,12 @@ class Resource(BaseResource):
 
     def new(self, **kwargs):
         data = yield from self.request.json()
-        if asyncio.iscoroutinefunction(self.validate_allowed_fields):
+        if asyncio.iscoroutine(self.validate_allowed_fields(data)):
             yield from self.validate_allowed_fields(data)
         else:
             self.validate_allowed_fields(data)
 
-        if asyncio.iscoroutinefunction(self.required_fields):
+        if asyncio.iscoroutine(self.validate_required_fields(data)):
             yield from self.validate_required_fields(data)
         else:
             self.validate_required_fields(data)
