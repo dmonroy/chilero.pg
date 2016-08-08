@@ -416,7 +416,7 @@ class Resource(BaseResource):
         result_allowed = self.validate_allowed_fields(data)
         if asyncio.iscoroutine(result_allowed):  # pragma: no cover
             yield from result_allowed
-        
+
         result_required = self.validate_required_fields(data)
         if asyncio.iscoroutine(result_required):  # pragma: no cover
             yield from result_required
