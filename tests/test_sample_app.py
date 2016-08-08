@@ -12,6 +12,7 @@ class Friends(Resource):
     order_by = 'name ASC'
     search_fields = ['name']
     allowed_fields = ['name']
+    required_fields = ['name']
     allow_order_by = ['name']
 
     def serialize_object(self, row):
@@ -231,4 +232,26 @@ class TestBasic(BaseTestCase):
         assert presp.status == 400
         presp.close()
 
+    @asynctest
+    def test_update_empty_required_400(self):
+        _, friend = yield from self._create_friend()
+        _.close()
 
+        new_name = "   "
+
+        presp = yield from self._patch(friend['url'], name=new_name)
+
+        assert presp.status == 400
+        presp.close()
+
+    @asynctest
+    def test_update_None_required_400(self):
+        _, friend = yield from self._create_friend()
+        _.close()
+
+        new_name = None
+
+        presp = yield from self._patch(friend['url'], name=new_name)
+
+        assert presp.status == 400
+        presp.close()
