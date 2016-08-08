@@ -339,12 +339,11 @@ class Resource(BaseResource):
     def validate_required_fields(self, data):
         id = self.request.match_info.get('id')
         a = {}
-        if asyncio.iscoroutine(self.get_required_fields()):
+        required = self.get_required_fields()
+        if asyncio.iscoroutine(required):
             required = yield from self.get_required_fields()
-        else:
-            required = self.get_required_fields()
-        for f in required:
 
+        for f in required:
             if id:
                 a[f] = data.get(f, " ")
                 print(data.get(f, " "))
@@ -376,15 +375,14 @@ class Resource(BaseResource):
 
     def update(self, id, **kwargs):
         data = yield from self.request.json()
-        if asyncio.iscoroutine(self.validate_allowed_fields(data)):
-            yield from self.validate_allowed_fields(data)
-        else:
-            self.validate_allowed_fields(data)
 
-        if asyncio.iscoroutine(self.validate_required_fields(data)):
-            yield from self.validate_required_fields(data)
-        else:
-            self.validate_required_fields(data)
+        result_allowed = self.validate_allowed_fields(data)
+        if asyncio.iscoroutine(result_allowed):  # pragma: no cover
+            yield from result_allowed
+
+        result_required = self.validate_required_fields(data)
+        if asyncio.iscoroutine(result_required):  # pragma: no cover
+            yield from result_required
 
         data = self.prepare_update(data)
         if asyncio.iscoroutine(data):  # pragma: no cover
@@ -414,15 +412,14 @@ class Resource(BaseResource):
 
     def new(self, **kwargs):
         data = yield from self.request.json()
-        if asyncio.iscoroutine(self.validate_allowed_fields(data)):
-            yield from self.validate_allowed_fields(data)
-        else:
-            self.validate_allowed_fields(data)
 
-        if asyncio.iscoroutine(self.validate_required_fields(data)):
-            yield from self.validate_required_fields(data)
-        else:
-            self.validate_required_fields(data)
+        result_allowed = self.validate_allowed_fields(data)
+        if asyncio.iscoroutine(result_allowed):  # pragma: no cover
+            yield from result_allowed
+        
+        result_required = self.validate_required_fields(data)
+        if asyncio.iscoroutine(result_required):  # pragma: no cover
+            yield from result_required
 
         data = self.prepare_insert(data)
         if asyncio.iscoroutine(data):  # pragma: no cover
