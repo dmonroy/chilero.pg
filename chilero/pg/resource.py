@@ -184,13 +184,9 @@ class Resource(BaseResource):
 
     def validate_allowed_order_by(self, f):
         if f not in self.allow_order_by:
-            raise HTTPBadRequest(
-                body=self.error_response(
-                    'Order by "{field_name}" is not allowed'.format(
-                        field_name=f
-                    )
-                )
-            )
+            error = 'Order by "{field_name}" is not allowed'.format(
+                    field_name=f)
+            self.raise_http(HTTPBadRequest, error)
 
     def get_order_by(self):
         order_by_fields = []
@@ -328,13 +324,14 @@ class Resource(BaseResource):
     def validate_allowed_fields(self, data):
         for f in data.keys():
             if f not in self.get_allowed_fields():
-                raise HTTPBadRequest(
-                    body=self.error_response(
-                        'Field "{field_name}" is not allowed'.format(
+                error = 'Field "{field_name}" is not allowed'.format(
                             field_name=f
                         )
-                    )
-                )
+                self.raise_http(HTTPBadRequest, error)
+
+    def raise_http(self, error_class, error):
+        raise error_class() if error is None \
+            else error_class(body=self.error_response(error))
 
     def validate_required_fields(self, data):
         id = self.request.match_info.get('id')
@@ -347,32 +344,16 @@ class Resource(BaseResource):
 
             if id:
                 a[f] = data.get(f, " ")
-                print(data.get(f, " "))
                 if f in data:
                     if len(str(a.get(f)).strip()) == 0 or a.get(f) is None:
-                        raise HTTPBadRequest(
-                            body=self.error_response(
-                                'Field "{field_name}" is required'.format(
-                                    field_name=f
-                                )
-                            ),
-                            headers=[
-                                ['Access-Control-Allow-Origin', '*'],
-                            ]
-                        )
-
+                        error = 'Field "{field_name}" is required'.format(
+                                field_name=f)
+                        self.raise_http(HTTPBadRequest, error)
             else:
                 if f not in data.keys():
-                    raise HTTPBadRequest(
-                        body=self.error_response(
-                            'Field "{field_name}" is required'.format(
-                                field_name=f
-                            )
-                        ),
-                        headers=[
-                            ['Access-Control-Allow-Origin', '*'],
-                        ]
-                    )
+                    error = 'Field "{field_name}" is required'.format(
+                        field_name=f)
+                    self.raise_http(HTTPBadRequest, error)
 
     def update(self, id, **kwargs):
         data = yield from self.request.json()
@@ -405,9 +386,7 @@ class Resource(BaseResource):
                     query, tuple([data[f] for f in updated_fields]+[id])
                 )
             except DatabaseError as e:
-                raise HTTPConflict(
-                    body=self.error_response(e)
-                )
+                self.raise_http(HTTPConflict, e)
             yield from self.after_update(cur)
 
         return Response(status=204)
@@ -449,9 +428,7 @@ class Resource(BaseResource):
             try:
                 yield from cur.execute(query, tuple(values))
             except DatabaseError as e:
-                raise HTTPConflict(
-                    body=self.error_response(e)
-                )
+                self.raise_http(HTTPConflict, e)
             record_id = (yield from cur.fetchone())[0]
             yield from self.after_insert(cur, record_id)
 
@@ -472,8 +449,6 @@ class Resource(BaseResource):
                     query
                 )
             except DatabaseError as e:
-                raise HTTPConflict(
-                    body=self.error_response(e)
-                )
+                self.raise_http(HTTPConflict, e)
 
         return Response(status=200)
