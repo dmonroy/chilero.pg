@@ -186,7 +186,7 @@ class Resource(BaseResource):
         if f not in self.allow_order_by:
             error = 'Order by "{field_name}" is not allowed'.format(
                     field_name=f)
-            self.raise_http(HTTPBadRequest, error)
+            raise self.exception(HTTPBadRequest, error)
 
     def get_order_by(self):
         order_by_fields = []
@@ -327,10 +327,10 @@ class Resource(BaseResource):
                 error = 'Field "{field_name}" is not allowed'.format(
                             field_name=f
                         )
-                self.raise_http(HTTPBadRequest, error)
+                raise self.exception(HTTPBadRequest, error)
 
-    def raise_http(self, error_class, error):
-        raise error_class() if error is None \
+    def exception(self, error_class, error):
+        return error_class() if error is None \
             else error_class(body=self.error_response(error))
 
     def validate_required_fields(self, data):
@@ -347,12 +347,12 @@ class Resource(BaseResource):
                     if len(str(a.get(f)).strip()) == 0 or a.get(f) is None:
                         error = 'Field "{field_name}" is required'.format(
                                 field_name=f)
-                        self.raise_http(HTTPBadRequest, error)
+                        raise self.exception(HTTPBadRequest, error)
             else:
                 if f not in data.keys():
                     error = 'Field "{field_name}" is required'.format(
                         field_name=f)
-                    self.raise_http(HTTPBadRequest, error)
+                    raise self.exception(HTTPBadRequest, error)
 
     def update(self, id, **kwargs):
         data = yield from self.request.json()
@@ -384,7 +384,7 @@ class Resource(BaseResource):
                     query, tuple([data[f] for f in updated_fields]+[id])
                 )
             except DatabaseError as e:
-                self.raise_http(HTTPConflict, e)
+                raise self.exception(HTTPConflict, e)
             yield from self.after_update(cur)
 
         return Response(status=204)
@@ -425,7 +425,7 @@ class Resource(BaseResource):
             try:
                 yield from cur.execute(query, tuple(values))
             except DatabaseError as e:
-                self.raise_http(HTTPConflict, e)
+                raise self.exception(HTTPConflict, e)
             record_id = (yield from cur.fetchone())[0]
             yield from self.after_insert(cur, record_id)
 
@@ -446,6 +446,6 @@ class Resource(BaseResource):
                     query
                 )
             except DatabaseError as e:
-                self.raise_http(HTTPConflict, e)
+                raise self.exception(HTTPConflict, e)
 
         return Response(status=200)
