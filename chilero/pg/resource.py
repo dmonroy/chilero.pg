@@ -440,13 +440,12 @@ class Resource(BaseResource):
     def destroy(self, **kwargs):
         pool = yield from self.get_pool()
         with(yield from pool.cursor()) as cur:
-            query = 'DELETE FROM {table} where id={id_column}'.format(
-                table=self.get_table_name(),
-                id_column=kwargs['id']
+            query = 'DELETE FROM {table} where id=%s'.format(
+                table=self.get_table_name()
             )
             try:
                 yield from cur.execute(
-                    query
+                    query, [kwargs['id']]
                 )
             except DatabaseError as e:
                 raise self.exception(HTTPConflict, e)
