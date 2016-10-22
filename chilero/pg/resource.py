@@ -187,22 +187,25 @@ class Resource(BaseResource):
             error = 'Order by "{field_name}" is not allowed'.format(
                     field_name=f)
             raise self.exception(HTTPBadRequest, error)
+        return f
 
     def get_order_by(self):
         order_by_fields = []
         if 'order_by' in self.request.GET:
             order_by = self.request.GET['order_by']
             order_by = order_by.split(',')
+
             for x in order_by:
-                if x.startswith('-'):
-                    self.validate_allowed_order_by(x[1:])
-                    order_by_fields.append(x[1:]+'{}'.format(' Desc'))
-                else:
-                    self.validate_allowed_order_by(x)
-                    order_by_fields.append(x+'{}'.format(' Asc'))
+                mode = 'DESC' if x.startswith('-') else 'ASC'
+                x = x[1:] if x.startswith('-') else x
+
+                x = self.validate_allowed_order_by(x)
+                order_by_fields.append('{} {}'.format(x, mode))
+
             for a in self.order_by.split(','):
                 if a not in order_by_fields:
                     order_by_fields.append(a)
+
             return ','.join(order_by_fields)
         else:
             return self.order_by
