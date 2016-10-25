@@ -240,7 +240,7 @@ class Resource(BaseResource):
                 row = self.before_serialization(row)
                 if asyncio.iscoroutine(row):  # pragma: no cover
                     row = yield from row
-                obj = self.serialize_object(row)
+                obj = self.serialize_list_object(row)
                 if asyncio.iscoroutine(obj):  # pragma: no cover
                     obj = yield from obj
                 obj = self.after_serialization(obj)
