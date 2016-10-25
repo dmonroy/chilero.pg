@@ -6,18 +6,25 @@ from chilero.web.test import asynctest
 
 from chilero.pg import Resource
 from chilero.pg.test import TestCase, TEST_DB_SUFFIX
-
+import json
 
 class Friends(Resource):
     order_by = 'name ASC'
     search_fields = ['name']
-    allowed_fields = ['name']
+    allowed_fields = ['name', 'meta']
     required_fields = ['name']
     allow_order_by = ['name']
 
     def serialize_object(self, row):
         return dict(
             id=row[0],
+            name=row[1],
+            meta=row[2],
+            url=self.get_object_url(row[0])
+        )
+
+    def serialize_list_object(self, row):
+        return dict(
             name=row[1],
             url=self.get_object_url(row[0])
         )
@@ -36,7 +43,8 @@ class BaseTestCase(TestCase):
     @asyncio.coroutine
     def _create_friend(self, **kwargs):
         defaults = dict(
-            name=self._random_string()
+            name=self._random_string(),
+            meta=json.dumps(dict(name='name1', data2='data2'))
         )
 
         return(
@@ -54,6 +62,9 @@ class TestAdvancedOptions(BaseTestCase):
             name = names.get_full_name()
             all_names.append(name)
             _, f = yield from self._create_friend(name=name)
+            t = yield from _.text()
+            print(t)
+            assert _.status==201
             _.close()
         return all_names
 
@@ -76,6 +87,7 @@ class TestAdvancedOptions(BaseTestCase):
         assert 'offset=0' in r['data']['prev']
         assert 'offset=40' in r['data']['next']
         assert len(r['index']) == r['data']['length']
+        assert len(r['index'][0].keys()) == 2
 
     @asynctest
     def test_pagination_no_limit(self):
@@ -170,6 +182,7 @@ class TestBasic(BaseTestCase):
         assert _.status == 201
         _.close()
         assert friend['name'] == name
+        assert len(friend.keys()) == 4
         efriend = yield from self._delete(friend['url'])
         assert efriend.status==200
 

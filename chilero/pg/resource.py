@@ -240,7 +240,7 @@ class Resource(BaseResource):
                 row = self.before_serialization(row)
                 if asyncio.iscoroutine(row):  # pragma: no cover
                     row = yield from row
-                obj = self.serialize_object(row)
+                obj = self.serialize_list_object(row)
                 if asyncio.iscoroutine(obj):  # pragma: no cover
                     obj = yield from obj
                 obj = self.after_serialization(obj)
@@ -440,13 +440,12 @@ class Resource(BaseResource):
     def destroy(self, **kwargs):
         pool = yield from self.get_pool()
         with(yield from pool.cursor()) as cur:
-            query = 'DELETE FROM {table} where id={id_column}'.format(
-                table=self.get_table_name(),
-                id_column=kwargs['id']
+            query = 'DELETE FROM {table} where id=%s'.format(
+                table=self.get_table_name()
             )
             try:
                 yield from cur.execute(
-                    query
+                    query, [kwargs['id']]
                 )
             except DatabaseError as e:
                 raise self.exception(HTTPConflict, e)
