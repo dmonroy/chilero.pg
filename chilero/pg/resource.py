@@ -379,7 +379,8 @@ class Resource(BaseResource):
             yield from self.before_update(cur)
             query = 'update {table} set {fields} where {id_column}=%s'.format(
                 table=self.get_table_name(),
-                fields=','.join(['{}=%s'.format(x)for x in updated_fields]),
+                fields=','.join(['{}={}'.format(
+                    x, self.get_value_placeholder(x))for x in updated_fields]),
                 id_column=self.id_column
             )
             try:
@@ -391,6 +392,9 @@ class Resource(BaseResource):
             yield from self.after_update(cur)
 
         return Response(status=204)
+
+    def get_value_placeholder(self, x):
+        return '%s'
 
     def new(self, **kwargs):
         data = yield from self.request.json()
@@ -418,12 +422,12 @@ class Resource(BaseResource):
             ).format(
                 table=self.get_table_name(),
                 fields=','.join(fields),
-                values=','.join(['%s' for x in fields]),
+                values=','.join(
+                    [self.get_value_placeholder(x) for x in fields]),
                 id_column=self.id_column
             )
 
             values = (data[x] for x in fields)
-
             yield from self.before_insert(cur)
             try:
                 yield from cur.execute(query, tuple(values))
