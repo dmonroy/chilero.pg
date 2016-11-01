@@ -380,7 +380,7 @@ class Resource(BaseResource):
             query = 'update {table} set {fields} where {id_column}=%s'.format(
                 table=self.get_table_name(),
                 fields=','.join(['{}={}'.format(
-                    x, self.get_value_placeholde(x))for x in updated_fields]),
+                    x, self.get_value_placeholder(x))for x in updated_fields]),
                 id_column=self.id_column
             )
             try:
@@ -393,7 +393,7 @@ class Resource(BaseResource):
 
         return Response(status=204)
 
-    def get_value_placeholde(self, x):
+    def get_value_placeholder(self, x):
         return '%s'
 
     def new(self, **kwargs):
@@ -423,7 +423,7 @@ class Resource(BaseResource):
                 table=self.get_table_name(),
                 fields=','.join(fields),
                 values=','.join(
-                    [self.get_value_placeholde(x) for x in fields]),
+                    [self.get_value_placeholder(x) for x in fields]),
                 id_column=self.id_column
             )
 
