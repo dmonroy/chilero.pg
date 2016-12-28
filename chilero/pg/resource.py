@@ -45,7 +45,7 @@ class Resource(BaseResource):
         query_args = tuple()
         if conditions:
             fields = conditions.keys()
-            filters = ', '.join(
+            filters = 'and '.join(
                 ['{field_name}=%s'.format(field_name=f) for f in fields]
             )
             query_filters = '{query} WHERE {filters}'.format(

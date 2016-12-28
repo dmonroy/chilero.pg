@@ -8,6 +8,7 @@ from chilero.pg import Resource
 from chilero.pg.test import TestCase, TEST_DB_SUFFIX
 import json
 
+
 class Friends(Resource):
     order_by = 'name ASC'
     search_fields = ['name']
@@ -30,6 +31,34 @@ class Friends(Resource):
         )
 
 
+class Friends2(Resource):
+    order_by = 'name ASC'
+    search_fields = ['name']
+    allowed_fields = ['name', 'meta']
+    required_fields = ['name']
+    allow_order_by = ['name']
+    table_name = 'friends'
+
+    def serialize_object(self, row):
+        return dict(
+            id=row[0],
+            name=row[1],
+            meta=row[2],
+            url=self.get_object_url(row[0])
+        )
+
+    def serialize_list_object(self, row):
+        return dict(
+            name=row[1],
+            url=self.get_object_url(row[0])
+        )
+
+    def index(self):
+        condition = dict(name='pedro', meta='{}')
+        index = yield from self.do_index(condition)
+        return self.response(index)
+
+
 class BaseTestCase(TestCase):
     settings = dict(
         db_url='postgres://postgres@localhost:5432/chilero_pg_{}'.format(
@@ -37,7 +66,8 @@ class BaseTestCase(TestCase):
         )
     )
     routes = [
-        ['/friends', Friends]
+        ['/friends', Friends],
+        ['/friends2', Friends2]
     ]
 
     @asyncio.coroutine
@@ -59,7 +89,7 @@ class TestAdvancedOptions(BaseTestCase):
         # create a lot of friends
         all_names = []
         for i in range(100):
-            name = names.get_full_name()
+            name = names.get_full_name()+str(i)
             all_names.append(name)
             _, f = yield from self._create_friend(name=name)
             t = yield from _.text()
@@ -172,6 +202,12 @@ class TestBasic(BaseTestCase):
     @asynctest
     def test_index_json(self):
         resp = yield from self._index('/friends')
+        assert isinstance(resp, dict)
+        assert 'index' in resp
+
+    @asynctest
+    def test_index_json_condition(self):
+        resp = yield from self._index('/friends2')
         assert isinstance(resp, dict)
         assert 'index' in resp
 
