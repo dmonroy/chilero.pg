@@ -12,7 +12,7 @@ setup_params = dict(
     description='PostgreSQL utilities for chilero',
     install_requires=[
         'aiopg',
-        'chilero>=0.4.2'
+        'chilero>=0.4.3'
     ],
     setup_requires=[
         'setuptools_scm',
