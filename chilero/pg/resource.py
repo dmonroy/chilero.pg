@@ -238,7 +238,7 @@ class Resource(BaseResource):
             index=[]
         )
         pool = yield from self.get_pool()
-        print(query)
+
         with (yield from pool.cursor()) as cur:
             yield from cur.execute(query, query_args)
             for row in (yield from cur.fetchall()):
