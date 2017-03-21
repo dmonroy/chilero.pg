@@ -45,11 +45,13 @@ class Resource(BaseResource):
         query_args = tuple()
         if conditions:
             fields = conditions.keys()
-            filters = 'and '.join(
+            filters = ' and '.join(
                 ['{field_name}=%s'.format(field_name=f) for f in fields]
             )
-            query_filters = '{query} WHERE {filters}'.format(
-                query=query_filters, filters=filters
+            separator = 'WHERE' if 'WHERE' \
+                                   not in self.get_list_query() else 'AND'
+            query_filters = '{query} {separator} {filters}'.format(
+                query=query_filters, filters=filters, separator=separator
             )
 
             query_args = tuple([conditions[f] for f in fields])
@@ -60,7 +62,9 @@ class Resource(BaseResource):
                 '{} ILIKE  %s'.format(f)
                 for f in self.search_fields for x in search_keywords
             )
-            separator = 'WHERE' if 'WHERE' not in query_filters else 'AND'
+            separator = 'WHERE' if (
+                'WHERE' not in query_filters and
+                'WHERE' not in self.get_list_query()) else 'AND'
             query_filters = '{query} {separator} {filters}'.format(
                 query=query_filters, separator=separator, filters=filters
             )
@@ -234,6 +238,7 @@ class Resource(BaseResource):
             index=[]
         )
         pool = yield from self.get_pool()
+        print(query)
         with (yield from pool.cursor()) as cur:
             yield from cur.execute(query, query_args)
             for row in (yield from cur.fetchall()):
